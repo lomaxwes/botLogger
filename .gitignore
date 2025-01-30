@@ -10,7 +10,7 @@ logs/
 .env
 config.json
 *.sqlite3
-db.sqlite3
+*.db
 
 .vscode/
 .idea/
