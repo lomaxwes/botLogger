@@ -21,11 +21,10 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
             elif db.checkUserInDb(userCode, dbSession):
                 await update.message.reply_text(f"Привет, {firstName} {lastName or ''}! Вы уже зарегистрированы.")
             else:
-                db.addUserToDb(userCode, username, firstName, lastName, dbSession)
+                db.addUserToDb(userCode, username, firstName, lastName)
                 await update.message.reply_text(f"Вы успешно зарегистрированы, {firstName} {lastName or ''}!")
         except Exception as e:
             await update.message.reply_text(f"Ошибка при регистрации. Пожалуйста, попробуйте позже. {str(e)}")
-
 
 def main():
     if not botToken:
@@ -42,14 +41,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
