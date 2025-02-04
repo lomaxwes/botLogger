@@ -34,34 +34,42 @@ def connect_db():
 conn = connect_db()
 cur = conn.cursor()
 
-try:
-    for line in sys.stdin:
-        try:
-            log = json.loads(line.strip())
-            cur.execute(
-                """
-                INSERT INTO nginx_logs 
-                (time_local, remote_addr, request, status, body_bytes_sent, http_referer, http_user_agent) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    log.get('time_local'),
-                    log.get('remote_addr'),
-                    log.get('request'),
-                    log.get('status'),
-                    log.get('body_bytes_sent'),
-                    log.get('http_referer', ''),
-                    log.get('http_user_agent', '')
-                )
-            )
-            conn.commit()
-            print("✅ Лог успешно записан в БД.")
+log_file_path = "/var/log/nginx/access.log"
 
-        except json.JSONDecodeError:
-            print("❌ Ошибка: некорректный JSON формат.")
-        except psycopg2.Error as e:
-            print(f"❌ Ошибка записи в БД: {e}")
-            conn.rollback()
+try:
+    with open(log_file_path, 'r') as log_file:
+        while True:
+            line = log_file.readline()
+            if not line:
+                time.sleep(1)
+                continue
+
+            try:
+                log = json.loads(line.strip())
+                cur.execute(
+                    """
+                    INSERT INTO nginx_logs 
+                    (time_local, remote_addr, request, status, body_bytes_sent, http_referer, http_user_agent) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        log.get('time_local'),
+                        log.get('remote_addr'),
+                        log.get('request'),
+                        log.get('status'),
+                        log.get('body_bytes_sent'),
+                        log.get('http_referer', ''),
+                        log.get('http_user_agent', '')
+                    )
+                )
+                conn.commit()
+                print("✅ Лог успешно записан в БД.")
+
+            except json.JSONDecodeError:
+                print("❌ Ошибка: некорректный JSON формат.")
+            except psycopg2.Error as e:
+                print(f"❌ Ошибка записи в БД: {e}")
+                conn.rollback()
 
 except KeyboardInterrupt:
     print("⏹ Программа остановлена пользователем.")
